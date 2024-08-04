@@ -1,0 +1,6 @@
+/target
+mount/
+*.lds
+qemu.log
+mount.img
+resources/iso/example

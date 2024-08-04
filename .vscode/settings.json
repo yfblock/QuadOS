@@ -1,0 +1,12 @@
+{
+    "rust-analyzer.check.allTargets": false,
+    "rust-analyzer.check.extraArgs": [],
+    "rust-analyzer.cargo.cfgs": {
+        "debug_assertions": null,
+        "miri": null
+    },
+    "rust-analyzer.cargo.features": [
+
+    ],
+    "rust-analyzer.procMacro.enable": true
+}
