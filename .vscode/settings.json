@@ -8,5 +8,15 @@
     "rust-analyzer.cargo.features": [
 
     ],
-    "rust-analyzer.procMacro.enable": true
+    "rust-analyzer.procMacro.enable": true,
+    "cSpell.words": [
+        "aarch64",
+        "loongarch64",
+        "polyhal",
+        "quados",
+        "riscv",
+        "rootfs",
+        "RUSTFLAGS",
+        "softfloat"
+    ]
 }

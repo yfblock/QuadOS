@@ -11,7 +11,6 @@ fn main() {
     gen_linker_script(&env::var("CARGO_CFG_BOARD").expect("can't find board"))
         .expect("can't generate linker script");
     println!("cargo:rerun-if-env-changed=CARGO_CFG_TARGET_ARCH");
-    println!("cargo:rerun-if-env-changed=CARGO_CFG_KERNEL_BASE");
     println!("cargo:rerun-if-changed=build.rs");
     println!("cargo:rerun-if-changed=linker/linker.lds.S");
 }
@@ -36,6 +35,5 @@ fn gen_linker_script(platform: &str) -> Result<()> {
 
     std::fs::write(&fname, ld_content)?;
     println!("cargo:rustc-link-arg=-Tkernel/{}", fname);
-    println!("cargo:rerun-if-env-changed=CARGO_CFG_KERNEL_BASE");
     Ok(())
 }

@@ -1,0 +1,75 @@
+#!/bin/env python3
+
+import argparse
+import subprocess
+from scripts import config, cargo, qemu
+
+def parse_args():
+    parser = argparse.ArgumentParser(description="Build Quados.")
+
+    parser.add_argument(
+        "-arch",
+        "--architecture",
+        dest="arch",
+        choices=config.target_list.keys(),
+        default="riscv64",
+        type=str,
+        help="Specify the architecture",
+    )
+
+    parser.add_argument(
+        "-p",
+        "--platform",
+        dest="platform",
+        type=str,
+        default="riscv64-qemu",
+        help="Specify the binary configuration",
+    )
+
+    parser.add_argument(
+        "-f",
+        "--rootfs",
+        dest="rootfs",
+        type=str,
+        default="ext4",
+        help="Specify the root filesystem",
+    )
+    
+    parser.add_argument(
+        "-l",
+        "--log",
+        dest="log",
+        choices=["off", "trace", "debug", "info", "warn", "error"],
+        type=str,
+        default="error",
+        help="Set the kernel logging level"
+    )
+    
+    parser.add_argument(
+        "method",
+        # dest="method",
+        choices=["build", "qemu"],
+        help="Specify the operation to be performed"
+    )
+
+    args = parser.parse_args()
+
+    config.arch = args.arch
+    config.platform = args.platform
+    config.rootfs = args.rootfs
+    config.log = args.log
+    return args
+
+def run_qemu():
+    method_map["build"]()
+    qemu.run()
+
+method_map = {
+    "build": cargo.build,
+    "qemu": run_qemu
+}
+
+if __name__ == "__main__":
+    args = parse_args()
+    config.build()
+    method_map[args.method]()
