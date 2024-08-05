@@ -1,4 +1,5 @@
 arch = ""
+graphic = False
 platform = ""
 rootfs = ""
 log = ""

@@ -46,9 +46,18 @@ def parse_args():
     )
     
     parser.add_argument(
+        "-g",
+        "--graphic",
+        dest="graphic",
+        action="store_true",
+        default=False,
+        help="Add graphic information"
+    )
+    
+    parser.add_argument(
         "method",
         # dest="method",
-        choices=["build", "qemu"],
+        choices=method_map.keys(),
         help="Specify the operation to be performed"
     )
 
@@ -58,15 +67,20 @@ def parse_args():
     config.platform = args.platform
     config.rootfs = args.rootfs
     config.log = args.log
+    config.graphic = args.graphic
     return args
 
 def run_qemu():
     method_map["build"]()
     qemu.run()
+    
+def clean():
+    subprocess.run(["rm", "-rf", "target", "qemu.log", "mount.img"])
 
 method_map = {
     "build": cargo.build,
-    "qemu": run_qemu
+    "qemu": run_qemu,
+    "clean": clean
 }
 
 if __name__ == "__main__":

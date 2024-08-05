@@ -29,9 +29,13 @@ def build():
     global kernel_bin
     
     extra_args = []
+    features = []
     kernel_elf = "target/{}/release/quados".format(config.rust_target)
     kernel_bin = kernel_elf + ".bin"
     env["LOG"] = config.log
+
+    if config.graphic:
+        features.append("polyhal/graphic")
 
     # Add rust configuration
     add_rust_cfg("board", "qemu")
@@ -51,6 +55,8 @@ def build():
         "--release",
         "--target",
         config.rust_target,
+        "--features",
+        "{}".format(",".join(features))
     ] + extra_args, env=env).check_returncode()
 
     # Convert elf to binary file
