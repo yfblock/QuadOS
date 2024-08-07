@@ -1,6 +1,9 @@
 import subprocess
 from . import config, cargo
 
+mem_size = "1G"
+core_num = "1"
+
 # Run qemu command.
 def run():
     qemu_args = []
@@ -40,10 +43,10 @@ def run():
 
     qemu_args += [
         "-m",
-        "1G",
+        mem_size,
         "-nographic",
         "-smp",
-        "1",
+        core_num,
         "-D",
         "qemu.log",
         "-d",
@@ -56,6 +59,9 @@ def run():
         "-device",
         "virtio-blk-{},drive=x0".format(bus)
     ]
+    
+    if config.gdb:
+        qemu_args += ["-s", "-S"]
 
     print(
         [

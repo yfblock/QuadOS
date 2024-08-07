@@ -2,13 +2,16 @@
 #![no_main]
 #![feature(panic_info_message)]
 
+#[macro_use]
 extern crate alloc;
 
-use alloc::vec::Vec;
+use alloc::{boxed::Box, vec::Vec};
 use mem::frames;
 use polyhal::{
     common::{get_fdt, PageAlloc},
     consts::VIRT_ADDR_START,
+    trap::TrapType::{self, *},
+    trapframe::{TrapFrame, TrapFrameArgs},
     PhysPage,
 };
 use spin::Mutex;
@@ -16,6 +19,8 @@ use spin::Mutex;
 mod config;
 mod lang_items;
 mod mem;
+mod syscall;
+mod task;
 mod utils;
 
 struct PageAllocator;
@@ -55,6 +60,26 @@ impl base::DAlloc for PageAllocator {
     }
 }
 
+/// Kernel Trap Handler
+#[polyhal::arch_interrupt]
+fn trap_handler(ctx: &mut TrapFrame, trap_type: TrapType) {
+    // log::debug!("trap_type @ {:x?} {:#x?}", trap_type, ctx);
+    match trap_type {
+        Breakpoint => return,
+        SysCall => {}
+        StorePageFault(paddr) | LoadPageFault(paddr) | InstructionPageFault(paddr) => {
+            log::info!("PageFault@{:#x}  {:#x}", ctx[TrapFrameArgs::SEPC], paddr);
+        }
+        IllegalInstruction(_) => {
+            log::info!("illegal instruction");
+        }
+        Timer => {}
+        _ => {
+            log::warn!("unsuspended trap type: {:?}", trap_type);
+        }
+    }
+}
+
 /// Kernel Entry Point
 #[polyhal::arch_entry]
 fn main(hart_id: usize) {
@@ -78,4 +103,10 @@ fn main(hart_id: usize) {
             });
         }
     }
+
+    // Test map elf
+    let task = Box::new(task::task::Task::from_elf(include_bytes!(
+        "../../resources/testcase-riscv64/bin/busybox"
+    )));
+    task.into_user();
 }

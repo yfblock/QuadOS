@@ -5,3 +5,4 @@ qemu.log
 mount.img
 resources/iso/example
 __pycache__
+*.log

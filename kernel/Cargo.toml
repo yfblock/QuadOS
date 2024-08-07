@@ -5,9 +5,11 @@ edition = "2021"
 
 [dependencies]
 log = "0.4"
-polyhal = { version = "0.1.3", features = ["logger"] }
+polyhal = { git = "https://github.com/Byte-OS/polyhal.git", features = ["logger", "trap"] }
 buddy_system_allocator = "0.10.0"
 fdt = "0.1.5"
 virtio = { path = "../drivers/virtio" }
-spin = { version = "0.9", features = ["lock_api"]}
 base = { path = "../drivers/base" }
+spin = { version = "0.9", features = ["lock_api"]}
+syscalls = { version = "0.6", default-features = false, features = ["all"] }
+xmas-elf = "0.9.1"

@@ -52,8 +52,8 @@ fdt:
 
 debug: fs-img build
 	@tmux new-session -d \
-	"$(QEMU_EXEC) -s -S && echo 'Press any key to continue' && read -n 1" && \
-	tmux split-window -h "$(GDB) $(KERNEL_ELF) -ex 'target remote localhost:1234' -ex 'disp /16i $$pc' " && \
+	"./quados qemu -l debug -d && echo 'Press any key to continue' && read -n 1" && \
+	tmux split-window -h "gdb target/riscv64gc-unknown-none-elf/release/quados -ex 'target remote localhost:1234' -ex 'disp /16i $$pc' " && \
 	tmux -2 attach-session -d
 
 clean:

@@ -60,6 +60,15 @@ def parse_args():
         choices=method_map.keys(),
         help="Specify the operation to be performed"
     )
+    
+    parser.add_argument(
+        "-d",
+        "--debug",
+        dest="debug",
+        action="store_true",
+        default=False,
+        help="Use gdb to debug the kernel"
+    )
 
     args = parser.parse_args()
 
@@ -68,6 +77,7 @@ def parse_args():
     config.rootfs = args.rootfs
     config.log = args.log
     config.graphic = args.graphic
+    config.gdb = args.debug
     return args
 
 def run_qemu():
