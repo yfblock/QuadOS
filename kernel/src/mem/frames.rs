@@ -28,7 +28,7 @@ pub(super) fn init_frames() {
             (start - VIRT_ADDR_START) / PAGE_SIZE
         } else {
             (phys_end - VIRT_ADDR_START) / PAGE_SIZE
-        } - VIRT_ADDR_START;
+        } - VIRT_ADDR_START / PAGE_SIZE;
 
         FRAME_ALLOCATOR
             .lock()
@@ -55,6 +55,11 @@ pub unsafe fn alloc_pages_raw(count: usize) -> PhysPage {
         .unwrap()
 }
 
+/// Deallocate a physical page from the [FRAME_ALLOCATOR].
+pub unsafe fn dealloc_pages_raw(start: PhysPage, count: usize) {
+    FRAME_ALLOCATOR.lock().dealloc(start.as_num(), count)
+}
+
 /// Allocate a page from the [FRAME_ALLOCATOR].
 pub fn alloc_page() -> FrameTracker {
     FRAME_ALLOCATOR
@@ -79,12 +84,6 @@ pub fn alloc_pages(count: usize) -> Vec<FrameTracker> {
 
 #[derive(Debug)]
 pub struct FrameTracker(PhysPage);
-
-impl FrameTracker {
-    pub const unsafe fn new(ppn: PhysPage) -> Self {
-        Self(ppn)
-    }
-}
 
 /// Implement the [Drop] trait for [FrameTracker]
 impl Drop for FrameTracker {

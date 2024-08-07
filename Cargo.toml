@@ -1,5 +1,7 @@
 [workspace]
 resolver = "2"
-members = [
+members = [ 
+    "drivers/base",
+    "drivers/virtio",
     "kernel"
 ]

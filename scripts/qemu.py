@@ -4,6 +4,7 @@ from . import config, cargo
 # Run qemu command.
 def run():
     qemu_args = []
+    bus = "device"
 
     if config.arch == "riscv64":
         qemu_args += [
@@ -23,6 +24,7 @@ def run():
             "-cpu",
             "IvyBridge-v2",
         ]
+        bus = "pci"
     elif config.arch == "aarch64":
         qemu_args += [
             "qemu-system-aarch64",
@@ -46,6 +48,13 @@ def run():
         "qemu.log",
         "-d",
         "in_asm,int,pcall,cpu_reset,guest_errors",
+    ]
+    
+    qemu_args += [
+        "-drive", 
+        "file={},if=none,format=raw,id=x0".format("mount.img"),
+        "-device",
+        "virtio-blk-{},drive=x0".format(bus)
     ]
 
     print(

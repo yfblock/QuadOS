@@ -36,6 +36,10 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0c4b4d0bd25bd0b74681c0ad21497610ce1b7c91b1022cd21c80c6fbdd9476b0"
 
 [[package]]
+name = "base"
+version = "0.1.0"
+
+[[package]]
 name = "bit"
 version = "0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -67,6 +71,12 @@ checksum = "a7913f22349ffcfc6ca0ca9a656ec26cfbba538ed49c31a273dff2c5d1ea83d9"
 dependencies = [
  "spin",
 ]
+
+[[package]]
+name = "byteorder"
+version = "1.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1fd0f2584146f6f2ef48085050886acf353beff7305ebd1ae69500e27c67f64b"
 
 [[package]]
 name = "cfg-if"
@@ -183,9 +193,13 @@ dependencies = [
 name = "quados"
 version = "0.1.0"
 dependencies = [
+ "base",
  "buddy_system_allocator",
+ "fdt",
  "log",
  "polyhal",
+ "spin",
+ "virtio",
 ]
 
 [[package]]
@@ -294,6 +308,26 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3354b9ac3fae1ff6755cb6db53683adb661634f67557942dea4facebec0fee4b"
 
 [[package]]
+name = "virtio"
+version = "0.1.0"
+dependencies = [
+ "base",
+ "lock_api",
+ "log",
+ "virtio-drivers",
+]
+
+[[package]]
+name = "virtio-drivers"
+version = "0.7.1"
+source = "git+https://github.com/rcore-os/virtio-drivers?rev=61ece50#61ece509c40f32c03378a7a037ef9863ed5deba7"
+dependencies = [
+ "bitflags 2.6.0",
+ "log",
+ "zerocopy",
+]
+
+[[package]]
 name = "volatile"
 version = "0.4.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -333,4 +367,25 @@ dependencies = [
  "bitflags 2.6.0",
  "rustversion",
  "volatile",
+]
+
+[[package]]
+name = "zerocopy"
+version = "0.7.35"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1b9b4fd18abc82b8136838da5d50bae7bdea537c574d8dc1a34ed098d6c166f0"
+dependencies = [
+ "byteorder",
+ "zerocopy-derive",
+]
+
+[[package]]
+name = "zerocopy-derive"
+version = "0.7.35"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "fa4f8080344d4671fb4e831a13ad1e68092748387dfc4f55e356242fae12ce3e"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn",
 ]

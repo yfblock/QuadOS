@@ -1,4 +1,5 @@
 SHELL := /bin/bash
+FS_IMG:= mount.img
 
 ifeq ($(NVME), on)
 QEMU_EXEC += -drive file=$(FS_IMG),if=none,id=nvm \
@@ -33,7 +34,7 @@ else
 	mkdir mount/ -p
 	sudo mount $(FS_IMG) mount/
 endif
-	sudo cp -rf resources/$(TESTCASE)/* mount/
+#	sudo cp -rf resources/$(TESTCASE)/* mount/
 	sync
 	sudo umount $(FS_IMG)
 

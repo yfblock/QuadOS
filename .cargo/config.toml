@@ -9,6 +9,7 @@ target = 'riscv64gc-unknown-none-elf'
 rustflags = [
     '-Cforce-frame-pointers=yes',
     '-Clink-arg=-no-pie',
+    '--cfg=board="qemu"'
 ]
 
 [env]
