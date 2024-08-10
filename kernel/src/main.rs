@@ -198,7 +198,7 @@ fn main(hart_id: usize) {
             .unwrap()
             .readat(0, &mut buffer)
             .unwrap(),
-            TRUNCATE_LEN
+        TRUNCATE_LEN
     );
     println!(
         "read data from /test/123 after truncate: {}",

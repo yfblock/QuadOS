@@ -20,25 +20,32 @@ static FRAME_ALLOCATOR: LazyInit<MutexNoIrq<FrameAllocator>> = LazyInit::new();
 /// Init the [FRAME_ALLOCATOR].
 pub(super) fn init_frames() {
     FRAME_ALLOCATOR.init_by(MutexNoIrq::new(FrameAllocator::new()));
-    get_mem_areas().into_iter().for_each(|(start, mut size)| {
-        // Align up end symbol's address with PAGE_SIZE.
-        // FIXME: Skip a page after end for x86_64, else it will affect the frame allocator
-        //        to assign a page not in the available space.
-        let phys_end = (sym_addr!(end) + 2 * PAGE_SIZE - 1) / PAGE_SIZE * PAGE_SIZE;
+    get_mem_areas()
+        .into_iter()
+        .for_each(|(mut start, mut size)| {
+            // Align up end symbol's address with PAGE_SIZE.
+            let phys_end = (sym_addr!(end) + PAGE_SIZE - 1) / PAGE_SIZE * PAGE_SIZE;
 
-        let frame_start = match phys_end >= start && phys_end <= start + size {
-            true => {
-                size -= phys_end - start;
-                (phys_end - VIRT_ADDR_START) / PAGE_SIZE
+            // Get the new start address.
+            start = match phys_end >= start && phys_end <= start + size {
+                true => {
+                    size -= phys_end - start;
+                    phys_end - VIRT_ADDR_START
+                }
+                false => start - VIRT_ADDR_START,
+            };
+
+            // Ensure that all memory is zeroed.
+            unsafe {
+                let per_len = core::mem::size_of::<u128>();
+                core::slice::from_raw_parts_mut(start as *mut u128, size / per_len).fill(0);
             }
-            false => (start - VIRT_ADDR_START) / PAGE_SIZE,
-        };
 
-        FRAME_ALLOCATOR
-            .lock()
-            .add_frame(frame_start, frame_start + size / PAGE_SIZE);
-        log::debug!("frame memory {:#x} - {:#x}", start, start + size);
-    });
+            FRAME_ALLOCATOR
+                .lock()
+                .add_frame(start / PAGE_SIZE, (start + size) / PAGE_SIZE);
+            log::debug!("frame memory {:#010x} - {:#010x}", start, start + size);
+        });
 }
 
 /// Allocate a Physical Page from the [FRAME_ALLOCATOR].
@@ -61,6 +68,8 @@ pub unsafe fn alloc_pages_raw(count: usize) -> PhysPage {
 
 /// Deallocate a physical page from the [FRAME_ALLOCATOR].
 pub unsafe fn dealloc_pages_raw(start: PhysPage, count: usize) {
+    // Ensure the allocate page is clean
+    (0..count).for_each(|i| (start + i).drop_clear());
     FRAME_ALLOCATOR.lock().dealloc(start.as_num(), count)
 }
 
@@ -92,6 +101,7 @@ pub struct FrameTracker(pub PhysPage);
 /// Implement the [Drop] trait for [FrameTracker]
 impl Drop for FrameTracker {
     fn drop(&mut self) {
+        self.0.drop_clear();
         FRAME_ALLOCATOR.lock().dealloc(self.0.as_num(), 1)
     }
 }

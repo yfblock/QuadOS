@@ -248,6 +248,8 @@ impl Task {
                     Sysno::getppid => 1,
                     Sysno::uname => 0,
                     Sysno::getcwd => 0,
+                    #[cfg(target_arch = "x86_64")]
+                    Sysno::arch_prctl => 0,
                     Sysno::brk => {
                         if tf.args()[0] == 0 {
                             0x2_0000_0000
