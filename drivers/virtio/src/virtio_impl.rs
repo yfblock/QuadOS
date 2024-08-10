@@ -1,5 +1,5 @@
-use base::DAlloc;
 use core::{marker::PhantomData, ptr::NonNull};
+use drivers_base::DAlloc;
 use virtio_drivers::{BufferDirection, Hal, PhysAddr};
 
 pub struct HalImpl<T: DAlloc>(PhantomData<T>);

@@ -1,6 +1,6 @@
 use alloc::sync::Arc;
 use alloc::vec::Vec;
-use base::{BlkDriver, DAlloc, DeviceType, Driver};
+use drivers_base::{BlkDriver, DAlloc, DeviceType, Driver};
 use lock_api::{Mutex, RawMutex};
 use virtio_drivers::device::blk::VirtIOBlk;
 use virtio_drivers::transport::Transport;

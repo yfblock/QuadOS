@@ -1,5 +1,5 @@
 [package]
-name = "virtio"
+name = "drivers-virtio"
 version = "0.1.0"
 edition = "2021"
 
@@ -8,5 +8,5 @@ edition = "2021"
 [dependencies]
 log = "0.4"
 virtio-drivers = { git = "https://github.com/rcore-os/virtio-drivers", rev = "61ece50"}
-base = { path = "../base" }
+drivers-base = { path = "../base" }
 lock_api = "0.4"

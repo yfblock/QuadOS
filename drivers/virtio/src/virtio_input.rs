@@ -1,6 +1,6 @@
 use alloc::sync::Arc;
 use alloc::vec::Vec;
-use base::{DAlloc, DeviceType, Driver, InputDriver};
+use drivers_base::{DAlloc, DeviceType, Driver, InputDriver};
 use lock_api::{Mutex, RawMutex};
 use virtio_drivers::device::input::VirtIOInput as VirtIOInputWrapper;
 use virtio_drivers::transport::Transport;

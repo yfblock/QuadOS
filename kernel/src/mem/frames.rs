@@ -22,13 +22,16 @@ pub(super) fn init_frames() {
     FRAME_ALLOCATOR.init_by(MutexNoIrq::new(FrameAllocator::new()));
     get_mem_areas().into_iter().for_each(|(start, mut size)| {
         // Align up end symbol's address with PAGE_SIZE.
-        let phys_end = (sym_addr!(end) + PAGE_SIZE - 1) / PAGE_SIZE * PAGE_SIZE;
+        // FIXME: Skip a page after end for x86_64, else it will affect the frame allocator
+        //        to assign a page not in the available space.
+        let phys_end = (sym_addr!(end) + 2 * PAGE_SIZE - 1) / PAGE_SIZE * PAGE_SIZE;
 
-        let frame_start = if phys_end >= start && phys_end <= size {
-            (start - VIRT_ADDR_START) / PAGE_SIZE
-        } else {
-            size -= phys_end - start;
-            (phys_end - VIRT_ADDR_START) / PAGE_SIZE
+        let frame_start = match phys_end >= start && phys_end <= start + size {
+            true => {
+                size -= phys_end - start;
+                (phys_end - VIRT_ADDR_START) / PAGE_SIZE
+            }
+            false => (start - VIRT_ADDR_START) / PAGE_SIZE,
         };
 
         FRAME_ALLOCATOR

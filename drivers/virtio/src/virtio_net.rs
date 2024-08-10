@@ -2,7 +2,7 @@ use core::cmp;
 
 use alloc::sync::Arc;
 use alloc::vec::Vec;
-use base::{DAlloc, DeviceType, Driver, NetDriver, NetError};
+use drivers_base::{DAlloc, DeviceType, Driver, NetDriver, NetError};
 use lock_api::{Mutex, RawMutex};
 use virtio_drivers::device::net::{self, TxBuffer};
 use virtio_drivers::transport::Transport;

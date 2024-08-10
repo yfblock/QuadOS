@@ -1,0 +1,9 @@
+[package]
+name = "fs-ramfs"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+fs-base = { path = "../base" }
+lock_api = "0.4"
+log = "0.4"

@@ -14,7 +14,7 @@ pub mod virtio_net;
 use core::ptr::NonNull;
 
 use alloc::{sync::Arc, vec::Vec};
-use base::{DAlloc, Driver};
+use drivers_base::{DAlloc, Driver};
 use lock_api::RawMutex;
 use virtio_drivers::transport::{
     mmio::{MmioTransport, VirtIOHeader},

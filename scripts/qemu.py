@@ -44,7 +44,6 @@ def run():
     qemu_args += [
         "-m",
         mem_size,
-        "-nographic",
         "-smp",
         core_num,
         "-D",
@@ -52,6 +51,9 @@ def run():
         "-d",
         "in_asm,int,pcall,cpu_reset,guest_errors",
     ]
+    
+    if not config.graphic or config.arch != "x86_64":
+        qemu_args += ["-nographic"]
     
     qemu_args += [
         "-drive", 

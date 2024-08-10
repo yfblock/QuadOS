@@ -1,7 +1,5 @@
+[patch]
+
 [workspace]
+members = ["drivers/base", "drivers/virtio", "fs/base", "fs/ramfs", "kernel"]
 resolver = "2"
-members = [ 
-    "drivers/base",
-    "drivers/virtio",
-    "kernel"
-]

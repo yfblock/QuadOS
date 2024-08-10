@@ -1,6 +1,6 @@
 use core::{cell::UnsafeCell, cmp::min};
 
-use alloc::collections::btree_map::BTreeMap;
+use alloc::{collections::btree_map::BTreeMap, vec::Vec};
 use polyhal::{
     debug_console::DebugConsole,
     pagetable::PAGE_SIZE,
@@ -81,7 +81,7 @@ pub struct Task {
 
 impl Task {
     /// Create a new Monolithic Task from the given elf file.
-    pub fn from_elf(elf_data: &[u8]) -> Self {
+    pub fn from_elf(elf_data: &[u8], args: &[&str]) -> Self {
         let page_table = PageTableWrapper::alloc();
         let mut task = Task {
             page_table,
@@ -95,12 +95,6 @@ impl Task {
         file.program_iter()
             .filter(|ph| ph.get_type() == Ok(Type::Load))
             .for_each(|ph| {
-                log::debug!(
-                    "map elf file: {:#010x} - {:#010x}",
-                    ph.virtual_addr(),
-                    ph.virtual_addr() + ph.mem_size()
-                );
-
                 let mut offset = ph.offset() as usize;
                 let mut vaddr = ph.virtual_addr() as usize;
                 let end = offset + ph.file_size() as usize;
@@ -148,16 +142,18 @@ impl Task {
 
         let mut stack_ptr = DEFAULT_USER_STACK_TOP;
 
-        let args = ["/busybox", "ls", "-a"];
-        let args_ptr = args.map(|arg| {
-            // TODO: set end bit was zeroed manually.
-            stack_ptr = (stack_ptr - arg.bytes().len() - 1) / ALIGN_SIZE * ALIGN_SIZE;
-            task.memset
-                .vpn_to_ppn(VirtPage::from_addr(stack_ptr))
-                .get_buffer()[stack_ptr % PAGE_SIZE..stack_ptr % PAGE_SIZE + arg.bytes().len()]
-                .copy_from_slice(arg.as_bytes());
-            stack_ptr
-        });
+        let args_ptr: Vec<_> = args
+            .iter()
+            .map(|arg| {
+                // TODO: set end bit was zeroed manually.
+                stack_ptr = (stack_ptr - arg.bytes().len() - 1) / ALIGN_SIZE * ALIGN_SIZE;
+                task.memset
+                    .vpn_to_ppn(VirtPage::from_addr(stack_ptr))
+                    .get_buffer()[stack_ptr % PAGE_SIZE..stack_ptr % PAGE_SIZE + arg.bytes().len()]
+                    .copy_from_slice(arg.as_bytes());
+                stack_ptr
+            })
+            .collect();
 
         let mut push_num = |num: usize| {
             stack_ptr = stack_ptr - core::mem::size_of::<usize>();
@@ -246,6 +242,12 @@ impl Task {
                     Sysno::getuid => 0,
                     Sysno::ioctl => -1 as isize as usize,
                     Sysno::dup3 => 4,
+                    Sysno::getpid => 1,
+                    Sysno::rt_sigprocmask => 0,
+                    Sysno::rt_sigaction => 0,
+                    Sysno::getppid => 1,
+                    Sysno::uname => 0,
+                    Sysno::getcwd => 0,
                     Sysno::brk => {
                         if tf.args()[0] == 0 {
                             0x2_0000_0000
