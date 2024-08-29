@@ -4,6 +4,7 @@ from . import config, cargo
 mem_size = "1G"
 core_num = "1"
 
+
 # Run qemu command.
 def run():
     qemu_args = []
@@ -51,17 +52,20 @@ def run():
         "-d",
         "in_asm,int,pcall,cpu_reset,guest_errors",
     ]
-    
+
+    # Enable E1000 Device.
+    qemu_args += ["-netdev", "user,id=net0", "-device", "e1000,netdev=net0"]
+
     if not config.graphic or config.arch != "x86_64":
         qemu_args += ["-nographic"]
-    
+
     qemu_args += [
-        "-drive", 
+        "-drive",
         "file={},if=none,format=raw,id=x0".format("mount.img"),
         "-device",
-        "virtio-blk-{},drive=x0".format(bus)
+        "virtio-blk-{},drive=x0".format(bus),
     ]
-    
+
     if config.gdb:
         qemu_args += ["-s", "-S"]
 

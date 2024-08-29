@@ -5,14 +5,19 @@ edition = "2021"
 
 [dependencies]
 log = "0.4"
-polyhal = { git = "https://github.com/Byte-OS/polyhal.git", features = ["logger", "trap"] }
+polyhal = { git = "https://github.com/Byte-OS/polyhal.git", features = [
+  "logger",
+  "graphic",
+  "trap",
+] }
 buddy_system_allocator = "0.10.0"
 fdt = "0.1.5"
 drivers-virtio = { path = "../drivers/virtio" }
 drivers-base = { path = "../drivers/base" }
 fs-base = { path = "../fs/base" }
 fs-ramfs = { path = "../fs/ramfs" }
-spin = { version = "0.9", features = ["lock_api"]}
+spin = { version = "0.9", features = ["lock_api"] }
 syscalls = { version = "0.6", default-features = false, features = ["all"] }
 xmas-elf = "0.9.1"
+virtio-drivers = { git = "https://github.com/rcore-os/virtio-drivers.git" }
 lock_api = "0.4"

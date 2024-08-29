@@ -250,6 +250,7 @@ impl Task {
                     Sysno::getcwd => 0,
                     #[cfg(target_arch = "x86_64")]
                     Sysno::arch_prctl => 0,
+                    Sysno::exit_group => panic!("sys_exit_group"),
                     Sysno::brk => {
                         if tf.args()[0] == 0 {
                             0x2_0000_0000

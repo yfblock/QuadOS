@@ -2,7 +2,6 @@
 #![no_main]
 #![feature(panic_info_message)]
 
-#[macro_use]
 extern crate alloc;
 
 use core::ffi::CStr;
@@ -24,6 +23,7 @@ use spin::{Mutex, RwLock};
 mod config;
 mod lang_items;
 mod mem;
+mod pci;
 mod syscall;
 mod task;
 mod utils;
@@ -133,11 +133,13 @@ fn main(hart_id: usize) {
                         addr as usize | VIRT_ADDR_START,
                         Vec::new(),
                     );
-                    log::debug!("driver: {:?}", dri);
+                    dri.inspect(|dri| log::debug!("{:?}", dri));
                 });
             });
         }
     }
+
+    pci::init();
 
     /* Test File System begin */
     FILE_TREE.init_by(FileTree::new());
