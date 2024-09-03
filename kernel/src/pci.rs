@@ -1,3 +1,4 @@
+use drivers_sdcard::SDCard;
 use log::{info, trace};
 use polyhal::{common::get_fdt, consts::VIRT_ADDR_START};
 use virtio_drivers::transport::pci::{
@@ -44,12 +45,28 @@ fn enumerate_pci(mmconfig_base: *mut u8) {
                 Command::IO_SPACE | Command::MEMORY_SPACE | Command::BUS_MASTER,
             );
         }
-        dump_bar_contents(&mut pci_root, device_function, 0);
+        for i in 0..6 {
+            dump_bar_contents(&mut pci_root, device_function, i);
+        }
+
+        if (info.vendor_id, info.device_id) == (0x1b36, 0x0007) {
+            pci_root.set_command(
+                device_function,
+                Command::IO_SPACE | Command::MEMORY_SPACE | Command::BUS_MASTER,
+            );
+            // TODO: probe pci ranges
+            pci_root.set_bar_32(device_function, 0, 0x4000_0000);
+            dump_bar_contents(&mut pci_root, device_function, 0);
+            SDCard::new(0x4000_0000 | VIRT_ADDR_START);
+        }
     }
 }
 
 /// Dump bar Contents.
 fn dump_bar_contents(root: &mut PciRoot, device_function: DeviceFunction, bar_index: u8) {
     let bar_info = root.bar_info(device_function, bar_index).unwrap();
+    if bar_info.memory_address_size().map(|x| x.1).unwrap_or(0) == 0 {
+        return;
+    }
     trace!("Dumping bar {}: {:#x?}", bar_index, bar_info);
 }

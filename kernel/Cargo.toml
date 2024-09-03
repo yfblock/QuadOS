@@ -14,6 +14,7 @@ buddy_system_allocator = "0.10.0"
 fdt = "0.1.5"
 drivers-virtio = { path = "../drivers/virtio" }
 drivers-base = { path = "../drivers/base" }
+drivers-sdcard = { path = "../drivers/sdcard" }
 fs-base = { path = "../fs/base" }
 fs-ramfs = { path = "../fs/ramfs" }
 spin = { version = "0.9", features = ["lock_api"] }

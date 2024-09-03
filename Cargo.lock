@@ -91,6 +91,13 @@ name = "drivers-base"
 version = "0.1.0"
 
 [[package]]
+name = "drivers-sdcard"
+version = "0.1.0"
+dependencies = [
+ "log",
+]
+
+[[package]]
 name = "drivers-virtio"
 version = "0.1.0"
 dependencies = [
@@ -234,6 +241,7 @@ version = "0.1.0"
 dependencies = [
  "buddy_system_allocator",
  "drivers-base",
+ "drivers-sdcard",
  "drivers-virtio",
  "fdt",
  "fs-base",

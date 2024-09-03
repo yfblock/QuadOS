@@ -53,18 +53,27 @@ def run():
         "in_asm,int,pcall,cpu_reset,guest_errors",
     ]
 
+    qemu_args += [
+        "-device",
+        "sdhci-pci",
+        "-drive",
+        "id=mydrive,if=none,format=raw,file=mount.img",
+        "-device",
+        "sd-card,drive=mydrive",
+    ]
+
     # Enable E1000 Device.
     qemu_args += ["-netdev", "user,id=net0", "-device", "e1000,netdev=net0"]
 
     if not config.graphic or config.arch != "x86_64":
         qemu_args += ["-nographic"]
 
-    qemu_args += [
-        "-drive",
-        "file={},if=none,format=raw,id=x0".format("mount.img"),
-        "-device",
-        "virtio-blk-{},drive=x0".format(bus),
-    ]
+    # qemu_args += [
+    #     "-drive",
+    #     "file={},if=none,format=raw,id=x0".format("mount.img"),
+    #     "-device",
+    #     "virtio-blk-{},drive=x0".format(bus),
+    # ]
 
     if config.gdb:
         qemu_args += ["-s", "-S"]
