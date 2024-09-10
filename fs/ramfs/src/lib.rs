@@ -415,12 +415,17 @@ impl<R: RawMutex + Send + Sync + 'static, F: FSTrait> INodeInterface for FileCon
     }
 
     fn utimes(&self, times: &mut [TimeSpec]) -> FsResult<()> {
-        // if times[0].nsec != TimeSpec::UTIME_OMIT {
-        //     self.inner.times.lock()[1] = times[0];
-        // }
-        // if times[1].nsec != TimeSpec::UTIME_OMIT {
-        //     self.inner.times.lock()[2] = times[1];
-        // }
+        let f_times = match self {
+            FileContainer::File(file) => &file.times,
+            FileContainer::Dir(_dir) => return Err(Errno::EISDIR),
+            _ => return Err(Errno::EBADF),
+        };
+        if times[0].nsec != TimeSpec::UTIME_OMIT {
+            f_times.lock()[1] = times[0];
+        }
+        if times[1].nsec != TimeSpec::UTIME_OMIT {
+            f_times.lock()[2] = times[1];
+        }
         // Ok(())
         todo!()
     }

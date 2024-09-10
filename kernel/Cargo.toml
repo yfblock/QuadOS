@@ -7,7 +7,7 @@ edition = "2021"
 log = "0.4"
 polyhal = { git = "https://github.com/Byte-OS/polyhal.git", features = [
   "logger",
-  "graphic",
+  #  "graphic",
   "trap",
 ] }
 buddy_system_allocator = "0.10.0"

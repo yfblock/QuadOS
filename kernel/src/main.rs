@@ -137,6 +137,24 @@ fn main(hart_id: usize) {
                 });
             });
         }
+        fdt.chosen()
+            .bootargs()
+            .inspect(|x| log::info!("BootArgs: {}", x));
+
+        let chosen = fdt.find_node("/chosen").unwrap();
+        log::info!(
+            "RamStart: {:#x?}",
+            chosen.property("linux,initrd-start").unwrap()
+        );
+        let start = usize::from_be_bytes(
+            chosen
+                .property("linux,initrd-start")
+                .unwrap()
+                .value
+                .try_into()
+                .unwrap(),
+        );
+        log::info!("Initrd Start: {:#x}", start);
     }
 
     pci::init();

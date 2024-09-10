@@ -32,8 +32,11 @@ def build():
     features = []
     kernel_elf = "target/{}/release/quados".format(config.rust_target)
     kernel_bin = kernel_elf + ".bin"
+
+    # Enable Log Level logging
     env["LOG"] = config.log
 
+    # Enable graphic if graphic flag
     if config.graphic:
         features.append("polyhal/graphic")
 
