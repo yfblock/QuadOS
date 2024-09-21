@@ -1,5 +1,6 @@
-use alloc::{collections::btree_map::BTreeMap, sync::Arc};
-use polyhal::percpu::def_percpu;
+#![allow(dead_code)]
+
+use alloc::collections::btree_map::BTreeMap;
 
 use super::task::Task;
 

@@ -84,6 +84,7 @@ pub fn alloc_page() -> FrameTracker {
 }
 
 /// Allocate count pages from the [FRAME_ALLOCATOR].
+#[allow(dead_code)]
 pub fn alloc_pages(count: usize) -> Vec<FrameTracker> {
     // Start page of the [FRAME_ALLOCATOR]
     let start = FRAME_ALLOCATOR.lock().alloc(count).unwrap();

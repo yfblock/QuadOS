@@ -1,5 +1,6 @@
 #![no_std]
 #![no_main]
+#![feature(try_blocks)]
 #![feature(panic_info_message)]
 
 extern crate alloc;
@@ -7,7 +8,7 @@ extern crate alloc;
 use core::ffi::CStr;
 
 use alloc::{boxed::Box, vec::Vec};
-use fs_base::{FSPage, FSTrait, FileTree, FileType, OpenFlags};
+use fs_base::{Errno, FSPage, FSTrait, FileTree, FileType, OpenFlags};
 use mem::frames::{self, alloc_pages_raw, dealloc_pages_raw};
 use polyhal::{
     common::{get_fdt, PageAlloc},
@@ -28,7 +29,7 @@ mod syscall;
 mod task;
 mod utils;
 
-struct PageAllocator;
+pub(crate) struct PageAllocator;
 
 impl PageAlloc for PageAllocator {
     /// Allocate a Physical Page.
@@ -142,19 +143,11 @@ fn main(hart_id: usize) {
             .inspect(|x| log::info!("BootArgs: {}", x));
 
         let chosen = fdt.find_node("/chosen").unwrap();
-        log::info!(
-            "RamStart: {:#x?}",
-            chosen.property("linux,initrd-start").unwrap()
-        );
-        let start = usize::from_be_bytes(
-            chosen
-                .property("linux,initrd-start")
-                .unwrap()
-                .value
-                .try_into()
-                .unwrap(),
-        );
-        log::info!("Initrd Start: {:#x}", start);
+        if let Some(init_rd) = chosen.property("linux,initrd-start") {
+            log::info!("RamStart: {:#x?}", init_rd);
+            let start = usize::from_be_bytes(init_rd.value.try_into().unwrap());
+            log::info!("Initrd Start: {:#x}", start);
+        }
     }
 
     pci::init();
@@ -162,86 +155,73 @@ fn main(hart_id: usize) {
     /* Test File System begin */
     FILE_TREE.init_by(FileTree::new());
 
-    FILE_TREE
-        .mount("/", fs_ramfs::RamFs::<Mutex<()>, FSTraitImpl>::new())
-        .unwrap();
-    FILE_TREE.root().mkdir("hello").unwrap();
-    FILE_TREE
-        .mount("/", fs_ramfs::RamFs::<Mutex<()>, FSTraitImpl>::new())
-        .expect("can't mount /");
-    FILE_TREE.root().mkdir("test").unwrap();
-    FILE_TREE
-        .root()
-        .open("/FileTree", OpenFlags::CREAT)
-        .unwrap();
-    FILE_TREE
-        .mount("/test", fs_ramfs::RamFs::<Mutex<()>, FSTraitImpl>::new())
-        .expect("can't mount /test");
-    FILE_TREE
-        .root()
-        .open("/test/123", OpenFlags::CREAT | OpenFlags::RDWR)
-        .unwrap()
-        .writeat(0, b"Hello world!")
-        .unwrap();
-    let mut buffer = [0u8; PAGE_SIZE];
-    assert_eq!(
+    let fs_res: Result<(), Errno> = try {
+        FILE_TREE.mount("/", fs_ramfs::RamFs::<Mutex<()>, FSTraitImpl>::new())?;
+        FILE_TREE.root().mkdir("hello")?;
+        FILE_TREE.mount("/", fs_ramfs::RamFs::<Mutex<()>, FSTraitImpl>::new())?;
+        FILE_TREE.root().mkdir("test")?;
+
+        FILE_TREE.root().open("/FileTree", OpenFlags::CREAT)?;
+        FILE_TREE.mount("/test", fs_ramfs::RamFs::<Mutex<()>, FSTraitImpl>::new())?;
         FILE_TREE
             .root()
-            .open("/test/123", OpenFlags::CREAT | OpenFlags::RDWR)
-            .unwrap()
-            .readat(0, &mut buffer)
-            .unwrap(),
-        b"Hello world!".len()
-    );
-    println!(
-        "read data from /test/123: {}",
-        CStr::from_bytes_until_nul(&buffer)
-            .unwrap()
-            .to_str()
-            .unwrap()
-    );
+            .open("/test/123", OpenFlags::CREAT | OpenFlags::RDWR)?
+            .writeat(0, b"Hello world!")?;
 
-    const TRUNCATE_LEN: usize = 5;
-    buffer.fill(0);
-    FILE_TREE
-        .root()
-        .open("/test/123", OpenFlags::RDWR)
-        .unwrap()
-        .truncate(TRUNCATE_LEN)
-        .unwrap();
-    println!("truncate file /test/123 with 5");
-
-    assert_eq!(
-        FILE_TREE
-            .root()
-            .open("/test/123", OpenFlags::RDWR)
-            .unwrap()
-            .readat(0, &mut buffer)
-            .unwrap(),
-        TRUNCATE_LEN
-    );
-    println!(
-        "read data from /test/123 after truncate: {}",
-        CStr::from_bytes_until_nul(&buffer)
-            .unwrap()
-            .to_str()
-            .unwrap()
-    );
-
-    for i in FILE_TREE.root().read_dir().expect("can't read directory") {
-        println!("file: {:#x?} type: {:#x?}", i.filename, i.file_type);
-        if i.file_type == FileType::Directory {
-            for i in FILE_TREE
+        let mut buffer = [0u8; PAGE_SIZE];
+        assert_eq!(
+            FILE_TREE
                 .root()
-                .open(&i.filename, OpenFlags::DIRECTORY)
+                .open("/test/123", OpenFlags::CREAT | OpenFlags::RDWR)?
+                .readat(0, &mut buffer)?,
+            b"Hello world!".len()
+        );
+        println!(
+            "read data from /test/123: {}",
+            CStr::from_bytes_until_nul(&buffer)
                 .unwrap()
-                .read_dir()
+                .to_str()
                 .unwrap()
-            {
-                println!("\tfile: {:#x?} type: {:#x?}", i.filename, i.file_type);
+        );
+
+        const TRUNCATE_LEN: usize = 5;
+        buffer.fill(0);
+        FILE_TREE
+            .root()
+            .open("/test/123", OpenFlags::RDWR)?
+            .truncate(TRUNCATE_LEN)?;
+        println!("truncate file /test/123 with 5");
+
+        assert_eq!(
+            FILE_TREE
+                .root()
+                .open("/test/123", OpenFlags::RDWR)?
+                .readat(0, &mut buffer)?,
+            TRUNCATE_LEN
+        );
+        println!(
+            "read data from /test/123 after truncate: {}",
+            CStr::from_bytes_until_nul(&buffer)
+                .unwrap()
+                .to_str()
+                .unwrap()
+        );
+
+        for i in FILE_TREE.root().read_dir().expect("can't read directory") {
+            println!("file: {:#x?} type: {:#x?}", i.filename, i.file_type);
+            if i.file_type == FileType::Directory {
+                for i in FILE_TREE
+                    .root()
+                    .open(&i.filename, OpenFlags::DIRECTORY)?
+                    .read_dir()?
+                {
+                    println!("\tfile: {:#x?} type: {:#x?}", i.filename, i.file_type);
+                }
             }
         }
-    }
+    };
+    fs_res.expect("test fs failed");
+
     /* Test File System end */
 
     // Test map elf
