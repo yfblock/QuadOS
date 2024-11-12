@@ -1,8 +1,10 @@
 use core::ptr::NonNull;
 
 use acpi::{AcpiError, AcpiHandler, AcpiTables};
+use driver_ehci::EHCIHost;
+use drivers_base::pci::PCIDevice;
 use drivers_sdcard::SDCard;
-use log::{info, trace};
+use log::info;
 use polyhal::{common::get_fdt, consts::VIRT_ADDR_START};
 use virtio_drivers::transport::pci::{
     bus::{Cam, Command, DeviceFunction, PciRoot},
@@ -22,9 +24,7 @@ pub fn init() {
         if let Some(pci_node) = fdt.all_nodes().find(|x| x.name.starts_with("pci")) {
             let pci_addr = pci_node.reg().map(|mut x| x.next().unwrap()).unwrap();
             log::info!("PCI Address: {:#p}", pci_addr.starting_address);
-            enumerate_pci(
-                (pci_addr.starting_address as usize | VIRT_ADDR_START) as *mut u8,
-            );
+            enumerate_pci((pci_addr.starting_address as usize | VIRT_ADDR_START) as *mut u8);
         }
     }
 }
@@ -33,6 +33,22 @@ pub fn init() {
 fn enumerate_pci(mmconfig_base: *mut u8) {
     info!("mmconfig_base = {:#x}", mmconfig_base as usize);
 
+    // let pci_root = PCIRoot::new(mmconfig_base, drivers_base::pci::Cam::Ecam);
+
+    // for (addr, bus, slot, func) in pci_root.enumerate_bus(0) {
+    //     let vendor = unsafe { addr.read_volatile() };
+    //     let device: u8 = unsafe { addr.add(1).read_volatile() };
+    //     log::debug!(
+    //         "Enumerating {:04x}:{:04x} {:02x}:{:02x}.{:02x}",
+    //         vendor,
+    //         device,
+    //         bus,
+    //         slot,
+    //         func
+    //     );
+    // }
+
+    // PCIDevice::new(0, 0, 0);
     let mut pci_root = unsafe { PciRoot::new(mmconfig_base, Cam::Ecam) };
     for (device_function, info) in pci_root.enumerate_bus(0) {
         let (status, command) = pci_root.get_status_command(device_function);
@@ -71,6 +87,26 @@ fn enumerate_pci(mmconfig_base: *mut u8) {
             dump_bar_contents(&mut pci_root, device_function, 0);
             SDCard::<PageAllocator>::new(0x4000_0000 | VIRT_ADDR_START, true);
         }
+        if (info.vendor_id, info.device_id) == (0x8086, 0x24cd) {
+            pci_root.set_command(
+                device_function,
+                Command::MEMORY_SPACE | Command::BUS_MASTER | Command::IO_SPACE,
+            );
+            log::debug!("Set Bar Info");
+            // TODO: probe pci ranges
+            pci_root.set_bar_32(device_function, 0, 0x4000_0000);
+            dump_bar_contents(&mut pci_root, device_function, 0);
+            EHCIHost::<PageAllocator>::new(
+                0x4000_0000 | VIRT_ADDR_START,
+                PCIDevice::from_raw(
+                    mmconfig_base,
+                    drivers_base::pci::Cam::Ecam,
+                    device_function.bus,
+                    device_function.device,
+                    device_function.function,
+                ),
+            );
+        }
     }
 }
 
@@ -80,7 +116,7 @@ fn dump_bar_contents(root: &mut PciRoot, device_function: DeviceFunction, bar_in
     if bar_info.memory_address_size().map(|x| x.1).unwrap_or(0) == 0 {
         return;
     }
-    trace!("Dumping bar {}: {:#x?}", bar_index, bar_info);
+    log::debug!("Dumping bar {}: {:#x?}", bar_index, bar_info);
 }
 
 #[derive(Clone)]

@@ -97,6 +97,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7059fff8937831a9ae6f0fe4d658ffabf58f2ca96aa9dec1c889f936f705f216"
 
 [[package]]
+name = "driver-ehci"
+version = "0.1.0"
+dependencies = [
+ "drivers-base",
+ "log",
+ "tock-registers 0.9.0",
+]
+
+[[package]]
 name = "drivers-base"
 version = "0.1.0"
 
@@ -253,6 +262,7 @@ version = "0.1.0"
 dependencies = [
  "acpi",
  "buddy_system_allocator",
+ "driver-ehci",
  "drivers-base",
  "drivers-sdcard",
  "drivers-virtio",

@@ -60,11 +60,11 @@ def run():
     #     "sd-card,drive=mydrive",
     # ]
 
-
-    qemu_args += [
-        "-drive",
-        "id=mydrive,if=sd,format=raw,file=mount.img",
-    ]
+    # Enable SD card
+    # qemu_args += [
+    #     "-drive",
+    #     "id=mydrive,if=sd,format=raw,file=mount.img",
+    # ]
 
     # Enable E1000 Device.
     # qemu_args += ["-netdev", "user,id=net0", "-device", "e1000,netdev=net0"]
@@ -77,6 +77,16 @@ def run():
     #     "-device",
     #     "usb-tablet,bus=ehci.0",
     # ]
+    qemu_args += [
+        "-trace",
+        "enable=usb*",
+        "-device",
+        "usb-ehci,id=ehci",
+        "-drive",
+        "if=none,id=usbstick,file=mount.img",
+        "-device",
+        "usb-storage,bus=ehci.0,drive=usbstick",
+    ]
     
     # Configure graphic for qemu
     if config.graphic:

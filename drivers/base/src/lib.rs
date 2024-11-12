@@ -1,5 +1,7 @@
 #![no_std]
 
+pub mod pci;
+
 extern crate alloc;
 
 use core::fmt::Debug;
